@@ -15,6 +15,10 @@ email='your_email_address'
 #you can find your api key here: https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-
 api_key='your_api_key'
 
+public_ip=$(curl -s ifconfig.io)
+
+current_ip=$(dig +short $domain)
+
 zone_id="$(curl -sX GET "$api_url/zones" \
                 -H "X-Auth-Email: $email" \
                 -H "X-Auth-Key: $api_key" \
@@ -32,9 +36,6 @@ record_id="$(curl -sX GET "$api_url/zones/$zone_id/dns_records?type=A&name=$doma
                   -H "X-Auth-Key: $api_key" \
                   -H "Content-Type: application/json" \
                   | jq -r '.result[] | select (.name | contains("'$domain'"))' | jq -r .id)"
-
-public_ip=$(curl -s ifconfig.io)
-current_ip=$(dig +short $domain)
 
 if [ "$public_ip" == "$current_ip" ]; then
     echo $(date)
