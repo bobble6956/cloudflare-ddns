@@ -6,11 +6,11 @@ A script for dynamically updating a CloudFlare DNS record.
 
 ## Dependencies
 ### 1. You'll need a JSON processor:
-[https://stedolan.github.io/jq/)](https://stedolan.github.io/jq/).
+[https://stedolan.github.io/jq/](https://stedolan.github.io/jq/).
 
 ### 2. Allow outgoing to:
-- [Cloudflare API](api.cloudflare.com).
-- [ifconfig.io](ifconfig.io).
+- [Cloudflare API](https://api.cloudflare.com).
+- [ifconfig.io](http://ifconfig.io).
 
 ### 3. Having following resources:
 - Cloudflare account
