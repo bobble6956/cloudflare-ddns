@@ -1,7 +1,7 @@
 #/bin/sh
 set -e
 
-api_url='https://api.cloudflare.com/client/v4/'
+api_url='https://api.cloudflare.com/client/v4'
 
 #your desired ddns domain "ddns.example.com"
 domain='your_domain'
@@ -25,11 +25,11 @@ zone_id="$(curl -sX GET "$api_url/zones" \
                 -H "Content-Type: application/json" \
                 | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .id)"
 
-account_id="$(curl -sX GET "$api_url/zones" \
-                   -H "X-Auth-Email: $email" \
-                   -H "X-Auth-Key: $api_key" \
-                   -H "Content-Type: application/json" \
-                   | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .account.id)"
+#account_id="$(curl -sX GET "$api_url/zones" \
+#                   -H "X-Auth-Email: $email" \
+#                   -H "X-Auth-Key: $api_key" \
+#                   -H "Content-Type: application/json" \
+#                   | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .account.id)"
 
 record_id="$(curl -sX GET "$api_url/zones/$zone_id/dns_records?type=A&name=$domain&direction=desc&match=all" \
                   -H "X-Auth-Email: $email" \
@@ -43,7 +43,7 @@ if [ "$public_ip" == "$current_ip" ]; then
 else
     echo $(date)
     echo "Updated IP is"
-    curl -sX PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$record_id" \
+    curl -sX PUT "$api_url/zones/$zone_id/dns_records/$record_id" \
          -H "X-Auth-Email: $email" \
          -H "X-Auth-Key: $api_key" \
          -H "Content-Type: application/json" \
