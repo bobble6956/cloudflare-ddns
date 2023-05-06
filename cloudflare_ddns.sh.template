@@ -14,7 +14,6 @@ email='your_email_address'
 
 #you can find your api key here: https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-
 api_key='your_api_key'
-
 public_ip=$(curl -s https://icanhazip.com)
 
 current_ip=$(dig +short $domain)
@@ -23,12 +22,6 @@ zone_id="$(curl -sX GET "$api_url/zones" \
                 -H "Authorization: Bearer $api_key" \
                 -H "Content-Type: application/json" \
                 | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .id)"
-echo $zone_id
-#account_id="$(curl -sX GET "$api_url/zones" \
-#                   -H "X-Auth-Email: $email" \
-#                   -H "X-Auth-Key: $api_key" \
-#                   -H "Content-Type: application/json" \
-#                   | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .account.id)"
 
 record_id="$(curl -sX GET "$api_url/zones/$zone_id/dns_records?type=A&name=$domain&direction=desc&match=all" \
                   -H "Authorization: Bearer $api_key" \
