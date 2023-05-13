@@ -10,7 +10,7 @@ A script for dynamically updating a CloudFlare DNS record.
 
 ### 2. Allow outgoing to:
 - [Cloudflare API](https://api.cloudflare.com)
-- [ifconfig.io](http://ifconfig.io)
+- [Cloudflare's IP checking site](https://icanhazip.com/)
 
 ### 3. Having following resources:
 - Cloudflare account
