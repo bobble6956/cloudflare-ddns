@@ -1,42 +1,62 @@
-#/bin/sh
-set -e
+#!/bin/sh
+set -eu
 
+# API URL
 api_url='https://api.cloudflare.com/client/v4'
 
-#your desired ddns domain "ddns.example.com"
-domain='your_domain'
+# Configuration (use environment variables)
+domain=${CLOUDFLARE_DOMAIN:-your_domain}
+zone=${CLOUDFLARE_ZONE:-your_second&TLD_domain}
+email=${CLOUDFLARE_EMAIL:-your_email_address}
+api_key=${CLOUDFLARE_API_KEY:-your_api_key}
 
-#your second and TLD domain "example.com"
-zone='your_second&TLD_domain'
+# Logging function
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
 
-#your login email address
-email='your_email_address'
+# Check for required commands
+for cmd in curl jq; do
+    if ! command -v $cmd &> /dev/null; then
+        log "Error: $cmd is not installed."
+        exit 1
+    fi
+done
 
-#you can find your api key here: https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-API-key-
-api_key='your_api_key'
+# Fetch current public IP
 public_ip=$(curl -s https://icanhazip.com)
+log "Public IP: $public_ip"
 
-current_ip=$(dig +short $domain)
-
-zone_id="$(curl -sX GET "$api_url/zones" \
-                -H "Authorization: Bearer $api_key" \
-                -H "Content-Type: application/json" \
-                | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .id)"
-
-record_id="$(curl -sX GET "$api_url/zones/$zone_id/dns_records?type=A&name=$domain&direction=desc&match=all" \
+# Fetch current DNS record IP
+current_ip=$(curl -s "$api_url/zones/$zone_id/dns_records?type=A&name=$domain" \
                   -H "Authorization: Bearer $api_key" \
                   -H "Content-Type: application/json" \
-                  | jq -r '.result[] | select (.name | contains("'$domain'"))' | jq -r .id)"
+                  | jq -r '.result[0].content')
+log "Current DNS IP: $current_ip"
 
+# Get Zone ID
+zone_id=$(curl -sX GET "$api_url/zones" \
+               -H "Authorization: Bearer $api_key" \
+               -H "Content-Type: application/json" \
+               | jq -r '.result[] | select (.name | contains("'$zone'"))' | jq -r .id)
+log "Zone ID: $zone_id"
+
+# Get Record ID
+record_id=$(curl -sX GET "$api_url/zones/$zone_id/dns_records?type=A&name=$domain&direction=desc&match=all" \
+                 -H "Authorization: Bearer $api_key" \
+                 -H "Content-Type: application/json" \
+                 | jq -r '.result[] | select (.name | contains("'$domain'"))' | jq -r .id)
+log "Record ID: $record_id"
+
+# Update DNS record if IP has changed
 if [ "$public_ip" == "$current_ip" ]; then
-    echo $(date)
-    echo "DON'T need to update"
+    log "IP address unchanged. No update needed."
 else
-    echo $(date)
-    echo "Updated IP is"
-    curl -sX PUT "$api_url/zones/$zone_id/dns_records/$record_id" \
-         -H "Authorization: Bearer $api_key" \
-         -H "Content-Type: application/json" \
-         --data '{"type":"A","name":"'$domain'","content":"'$public_ip'","ttl":1,"proxied":false}' \
-         | jq -r .result.content
+    log "Updating DNS record..."
+    response=$(curl -sX PUT "$api_url/zones/$zone_id/dns_records/$record_id" \
+                    -H "Authorization: Bearer $api_key" \
+                    -H "Content-Type: application/json" \
+                    --data '{"type":"A","name":"'$domain'","content":"'$public_ip'","ttl":1,"proxied":false}' \
+                    | jq -r .result.content)
+    log "DNS record updated successfully. New IP: $response"
 fi
