@@ -1,36 +1,92 @@
-# cloudflare-ddns
-Cloudflare Dynamic DNS update
+# Cloudflare Dynamic DNS Updater
 
-## Introduction
-A script for dynamically updating a CloudFlare DNS record.
+## Overview
 
-## Dependencies
-### 1. You'll need a JSON processor:
-[https://stedolan.github.io/jq/](https://stedolan.github.io/jq/)
+A shell script for automatically updating Cloudflare DNS A records with your current public IP address, ideal for home servers or dynamic IP networks.
 
-### 2. Allow outgoing to:
-- [Cloudflare API](https://api.cloudflare.com)
-- [Cloudflare's IP checking site](https://icanhazip.com/)
+## Features
 
-### 3. Having following resources:
+- Automatically detect public IP address
+- Compare current DNS record with public IP
+- Update Cloudflare DNS record if IP has changed
+- Minimal logging for tracking updates
+- Configurable via environment variables
+
+## Prerequisites
+
+### Dependencies
+
+- `curl`: For making API calls and fetching public IP
+- `jq`: JSON processor for parsing Cloudflare API responses
+
+### Cloudflare Requirements
+
 - Cloudflare account
-- Cloudflare API key
-- An A record belong to 1 zone managed by Cloudflare
+- API key with DNS record modification permissions
+- Managed DNS zone
+- Existing A record to update
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://your-repo-url/cloudflare-ddns.git
+   cd cloudflare-ddns
+   ```
+
+2. Copy the template configuration:
+   ```bash
+   cp cloudflare_ddns.sh.template cloudflare_ddns.sh
+   chmod +x cloudflare_ddns.sh
+   ```
+
+3. Configure environment variables:
+   ```bash
+   export CLOUDFLARE_DOMAIN=your_domain
+   export CLOUDFLARE_ZONE=your_second_tld_domain
+   export CLOUDFLARE_EMAIL=your_email_address
+   export CLOUDFLARE_API_KEY=your_api_key
+   ```
 
 ## Usage
-To use this script, create a copy of the [cloudflare_ddns.sh.template](cloudflare_ddns.sh.template) file (and remove .template from the filename). 
 
-Update below variable:
-- domain='your_domain'
-- zone='your_second&TLD_domain'
-- email='your_email_address'
-- api_key='your_api_key'
+### One-time Update
 
-To do a one-off update of your DNS record, simply run this script from your terminal. The script will determine your public IP address and automatically update the CloudFlare DNS record along with it.
+Run the script directly to perform a single DNS update:
 
-Because dynamic IPs can change regularly, it's recommended that you run this utility periodically in the background to keep the CloudFlare record up-to-date.
+```bash
+./cloudflare_ddns.sh
+```
 
-Just add a line to your crontab and let cron run it for you at a regular interval.
+### Periodic Updates with Cron
 
-#### Example cron: every 15 minutes, check the current public IP, and update the A record on CloudFlare.
-*/15 * * * * /path/to/code/cloudflare_ddns.sh >> /var/log/cloudflare_ddns.log 2>&1
+For continuous IP tracking, set up a cron job:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line to run every 15 minutes
+*/15 * * * * /path/to/cloudflare_ddns.sh >> /var/log/cloudflare_ddns.log 2>&1
+```
+
+## Security Considerations
+
+- Keep your API key confidential
+- Use read-restricted log files
+- Consider using more secure credential management for production
+
+## Troubleshooting
+
+- Ensure all dependencies are installed
+- Verify Cloudflare API key permissions
+- Check network connectivity
+- Review log files for detailed error messages
+
+## License
+
+[Specify your license here]
+
+## Contributing
+
+Contributions are welcome! Please submit pull requests or open issues on the repository.
